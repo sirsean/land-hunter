@@ -200,7 +200,7 @@ function FactionRow({ faction }) {
     }
     return (
         <tr>
-            <td><img src={faction.cover_preview} /></td>
+            <td><img src={faction.cover_preview} alt={faction.name} /></td>
             <td>{faction.name}</td>
             <td>{faction.gen_land}</td>
             <td>{faction.gen_bricks}</td>
