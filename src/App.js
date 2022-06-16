@@ -137,7 +137,7 @@ async function fetchFactionLands(factionAddr) {
         store.dispatch(setError(r.b));
         return Promise.all(r.d.explorers.filter(e => e.tile).map(e => fetchLand(e.tile.tile_id)));
     }).then(lands => {
-        store.dispatch(setLands(lands.sort(sortBy('-reward'))));
+        store.dispatch(setLands(lands.sort(sortBy('-reward')).splice(0, 10)));
     }).catch(e => {
         console.log(e);
         return null;
@@ -177,36 +177,31 @@ function LandsList() {
     }
 }
 
-function CurrentFaction() {
-    const faction = useSelector(selectCurrentFaction);
-    if (faction) {
-        const clickBack = (e) => {
-            store.dispatch(setCurrentFaction(null));
-        }
-        return (
-            <div>
-                <div><button onClick={clickBack}>Back</button></div>
-                <h1>{faction.name}</h1>
-                <LandsList />
-            </div>
-        );
-    }
-}
-
 function FactionRow({ faction }) {
+    const currentFaction = useSelector(selectCurrentFaction);
     const onClick = (e) => {
         store.dispatch(setCurrentFaction(faction));
         fetchFactionLands(faction.address);
     }
-    return (
+    let rows = [
         <tr>
-            <td><img src={faction.cover_preview} alt={faction.name} /></td>
+            <td className="left"><img src={faction.cover_preview} alt={faction.name} /></td>
             <td>{faction.name}</td>
             <td>{faction.gen_land}</td>
             <td>{faction.gen_bricks}</td>
             <td><button onClick={onClick}>Hunt</button></td>
         </tr>
-    );
+    ];
+    if (currentFaction && (currentFaction.address === faction.address)) {
+        rows.push(
+            <tr>
+                <td colSpan="5">
+                    <LandsList />
+                </td>
+            </tr>
+        );
+    }
+    return rows;
 }
 
 function FactionsList() {
@@ -224,7 +219,7 @@ function FactionsList() {
                     </tr>
                 </thead>
                 <tbody>
-                    {factions.map(f => <FactionRow key={f.address} faction={f} />)}
+                    {factions.map(f => <FactionRow key={f.address} faction={f} />).flat()}
                 </tbody>
             </table>
         );
@@ -243,16 +238,7 @@ function Error() {
 }
 
 function Main() {
-    const currentFaction = useSelector(selectCurrentFaction);
-    if (currentFaction) {
-        return (
-            <CurrentFaction />
-        );
-    } else {
-        return (
-            <FactionsList />
-        );
-    }
+    return <FactionsList />;
 }
 
 function App() {
