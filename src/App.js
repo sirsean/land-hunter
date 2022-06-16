@@ -5,16 +5,20 @@ import sortBy from 'sort-by';
 import './App.css';
 
 const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
-const APP_VERSION = '10154a1a1';
+const APP_VERSION = '10155a1a1';
 
 const slice = createSlice({
     name: 'land-hunter',
     initialState: {
+        error: null,
         factions: null,
         currentFaction: null,
         lands: null,
     },
     reducers: {
+        setError: (state, action) => {
+            state.error = action.payload;
+        },
         setFactions: (state, action) => {
             state.factions = action.payload;
         },
@@ -29,6 +33,7 @@ const slice = createSlice({
 });
 
 const {
+    setError,
     setFactions,
     setCurrentFaction,
     setLands,
@@ -37,6 +42,7 @@ const store = configureStore({
     reducer: slice.reducer,
 });
 
+const selectError = state => state.error;
 const selectFactions = state => state.factions;
 const selectCurrentFaction = state => state.currentFaction;
 const selectLands = state => state.lands;
@@ -55,7 +61,10 @@ async function fetchFactions() {
             },
         }),
     }).then(r => r.json())
-        .then(r => r.d.factions)
+        .then(r => {
+            store.dispatch(setError(r.b));
+            return r.d.factions;
+        })
         .then(factions => {
             store.dispatch(setFactions(factions));
         });
@@ -99,6 +108,7 @@ async function fetchLand(landId) {
             },
         }),
     }).then(r => r.json()).then(r => {
+        store.dispatch(setError(r.b));
         return buildLand(new Date(r.d.now), r.d.land.tile, r.d.land.bag, r.d.land.nft);
     }).catch(e => {
         //console.log(e);
@@ -124,6 +134,7 @@ async function fetchFactionLands(factionAddr) {
             },
         }),
     }).then(r => r.json()).then(r => {
+        store.dispatch(setError(r.b));
         return Promise.all(r.d.explorers.filter(e => e.tile).map(e => fetchLand(e.tile.tile_id)));
     }).then(lands => {
         store.dispatch(setLands(lands.sort(sortBy('-reward'))));
@@ -220,10 +231,23 @@ function FactionsList() {
     }
 }
 
+function Error() {
+    const msg = useSelector(selectError);
+    if (msg && msg !== 'Success') {
+        return (
+            <div className="error">
+                Error: ${msg} ... tell sirsean about it.
+            </div>
+        );
+    }
+}
+
 function Main() {
     const currentFaction = useSelector(selectCurrentFaction);
     if (currentFaction) {
-        return <CurrentFaction />;
+        return (
+            <CurrentFaction />
+        );
     } else {
         return (
             <FactionsList />
@@ -236,6 +260,7 @@ function App() {
     return (
         <Provider store={store}>
             <div className="App">
+                <Error />
                 <Main />
             </div>
         </Provider>
