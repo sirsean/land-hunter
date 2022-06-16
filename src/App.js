@@ -150,7 +150,7 @@ function LandRow({ land }) {
         <tr>
             <td className="left"><a href={href} target="_blank" rel="noreferrer">{land.landId}</a></td>
             <td>{land.country}</td>
-            <td>{land.reward.toFixed(5)}</td>
+            <td>{land.reward.toFixed(6)}</td>
             <td>{land.defense}</td>
         </tr>
     );
