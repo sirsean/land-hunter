@@ -49,9 +49,21 @@ table th {
     text-align: right;
 }
 
+table th.left {
+    text-align: left;
+}
+
 table td {
     font-size: 1.2em;
     text-align: right;
+}
+
+table td.left {
+    text-align: left;
+}
+
+table a {
+    font-size: 1.4em;
 }
 
 .factions img {

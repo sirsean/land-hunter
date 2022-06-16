@@ -148,9 +148,9 @@ function LandRow({ land }) {
     const href = `https://liquidlands.io/land/${land.landId}`;
     return (
         <tr>
-            <td><a href={href} target="_blank" rel="noreferrer">{land.landId}</a></td>
+            <td className="left"><a href={href} target="_blank" rel="noreferrer">{land.landId}</a></td>
             <td>{land.country}</td>
-            <td>{land.reward}</td>
+            <td>{land.reward.toFixed(5)}</td>
             <td>{land.defense}</td>
         </tr>
     );
@@ -163,7 +163,7 @@ function LandsList() {
             <table className="lands">
                 <thead>
                     <tr>
-                        <th>Land</th>
+                        <th className="left">Land</th>
                         <th>Country</th>
                         <th>Raid Reward</th>
                         <th>Defense</th>
