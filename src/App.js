@@ -66,7 +66,7 @@ async function fetchFactions() {
             return r.d.factions;
         })
         .then(factions => {
-            store.dispatch(setFactions(factions));
+            store.dispatch(setFactions(factions.filter(f => f.gen_land > 0)));
         });
 }
 
@@ -110,9 +110,6 @@ async function fetchLand(landId) {
     }).then(r => r.json()).then(r => {
         store.dispatch(setError(r.b));
         return buildLand(new Date(r.d.now), r.d.land.tile, r.d.land.bag, r.d.land.nft);
-    }).catch(e => {
-        //console.log(e);
-        return null;
     });
 }
 
@@ -138,9 +135,6 @@ async function fetchFactionLands(factionAddr) {
         return Promise.all(r.d.explorers.filter(e => e.tile).map(e => fetchLand(e.tile.tile_id)));
     }).then(lands => {
         store.dispatch(setLands(lands.sort(sortBy('-reward')).splice(0, 10)));
-    }).catch(e => {
-        console.log(e);
-        return null;
     });
 }
 
