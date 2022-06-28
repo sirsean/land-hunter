@@ -5,7 +5,7 @@ import sortBy from 'sort-by';
 import './App.css';
 
 const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
-const APP_VERSION = '10180a1a1';
+const APP_VERSION = '10182a1a1';
 
 const slice = createSlice({
     name: 'land-hunter',
