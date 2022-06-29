@@ -76,3 +76,10 @@ table a {
     font-size: 1.3em;
     color: var(--yellow);
 }
+
+.LandsLoaded {
+    font-size: 1.5em;
+    color: var(--yellow);
+    margin: 8px auto;
+    text-align: center;
+}

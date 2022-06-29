@@ -6,7 +6,7 @@ import RateLimiter from 'promise-rate-limiter';
 import './App.css';
 
 const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
-const APP_VERSION = '10184a1a1';
+const APP_VERSION = '10189a1a1';
 
 const ALLIED_FACTION_IDS = new Set([
     199, // Homie G
@@ -58,11 +58,25 @@ const store = configureStore({
 const selectError = state => state.error;
 const selectLands = state => {
     if (state.lands) {
-        return Object.keys(state.lands).map(landId => state.lands[landId]).sort(sortBy('-reward','-maxReward'));
+        return Object.keys(state.lands).map(landId => state.lands[landId]).sort(sortBy('-reward','-maxReward')).splice(0, 50);
     } else {
         return [];
     }
 };
+const selectLandCount = state => {
+    if (state.lands) {
+        return Object.keys(state.lands).length;
+    } else {
+        return null;
+    }
+}
+const selectLoadedLandCount = state => {
+    if (state.lands) {
+        return Object.keys(state.lands).map(landId => state.lands[landId]).filter(l => l.reward !== null).length;
+    } else {
+        return null;
+    }
+}
 
 function calculateReward(bricksPerDay, timeString) {
     if (timeString === null) {
@@ -178,6 +192,18 @@ function LandsList() {
     }
 }
 
+function LandsLoaded() {
+    const total = useSelector(selectLandCount);
+    const loaded = useSelector(selectLoadedLandCount);
+    if ((total !== null) && (loaded !== null)) {
+        return (
+            <div className="LandsLoaded">
+                <span>{loaded}/{total}</span>
+            </div>
+        );
+    }
+}
+
 function Error() {
     const msg = useSelector(selectError);
     if (msg && msg !== 'Success') {
@@ -190,7 +216,12 @@ function Error() {
 }
 
 function Main() {
-    return <LandsList />;
+    return (
+        <div>
+            <LandsLoaded />
+            <LandsList />
+        </div>
+    );
 }
 
 function App() {
