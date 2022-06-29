@@ -6,7 +6,7 @@ import RateLimiter from 'promise-rate-limiter';
 import './App.css';
 
 const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
-const APP_VERSION = '10183a1a1';
+const APP_VERSION = '10184a1a1';
 
 const ALLIED_FACTION_IDS = new Set([
     199, // Homie G
