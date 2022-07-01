@@ -2,11 +2,10 @@ import React from 'react';
 import { Provider, useSelector } from 'react-redux';
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 import sortBy from 'sort-by';
-import RateLimiter from 'promise-rate-limiter';
 import './App.css';
 
 const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
-const APP_VERSION = '10189a1a1';
+//const APP_VERSION = '10189a1a1';
 
 const ALLIED_FACTION_IDS = new Set([
     199, // Homie G
@@ -32,24 +31,12 @@ const slice = createSlice({
         setLands: (state, action) => {
             state.lands = action.payload;
         },
-        updateLand: (state, action) => {
-            const { tileId, reward, defense } = action.payload;
-            if (tileId) {
-                if (reward !== null) {
-                    state.lands[tileId].reward = reward;
-                }
-                if (defense !== null) {
-                    state.lands[tileId].defense = defense;
-                }
-            }
-        },
     },
 });
 
 const {
-    setError,
+    //setError,
     setLands,
-    updateLand,
 } = slice.actions;
 const store = configureStore({
     reducer: slice.reducer,
@@ -58,25 +45,11 @@ const store = configureStore({
 const selectError = state => state.error;
 const selectLands = state => {
     if (state.lands) {
-        return Object.keys(state.lands).map(landId => state.lands[landId]).sort(sortBy('-reward','-maxReward')).splice(0, 50);
+        return Object.keys(state.lands).map(landId => state.lands[landId]).sort(sortBy('-maxReward')).splice(0, 100);
     } else {
         return [];
     }
 };
-const selectLandCount = state => {
-    if (state.lands) {
-        return Object.keys(state.lands).length;
-    } else {
-        return null;
-    }
-}
-const selectLoadedLandCount = state => {
-    if (state.lands) {
-        return Object.keys(state.lands).map(landId => state.lands[landId]).filter(l => l.reward !== null).length;
-    } else {
-        return null;
-    }
-}
 
 function calculateReward(bricksPerDay, timeString) {
     if (timeString === null) {
@@ -91,42 +64,6 @@ function calculateReward(bricksPerDay, timeString) {
     }
 }
 
-async function fetchLand(tileId) {
-    return fetch(`${API_URL}/controller`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            controller: 'Land.Get',
-            debug: true,
-            fields: {
-                tile_id: tileId,
-                app_version: APP_VERSION,
-                exp_filter: 'best',
-                open_map_id: 0,
-            },
-        }),
-    }).then(r => r.json()).then(r => {
-        store.dispatch(setError(r.b));
-        const land = r.d.land;
-        if (land.bag && land.tile) {
-            store.dispatch(updateLand({
-                tileId: tileId,
-                defense: land.bag.defence_bonus,
-                reward: calculateReward(land.tile.bricks_per_day, land.tile.started),
-            }));
-        }
-    }).catch(e => {
-        console.error(e);
-    });
-}
-
-const fetchLandLimiter = new RateLimiter([
-    { limit: 10, duration: 1000 },
-    { limit: 100, duration: 60000 },
-], fetchLand);
-
 async function fetchLands() {
     return fetch(`${API_URL}/raw/land`, {
         method: 'GET',
@@ -136,10 +73,7 @@ async function fetchLands() {
     }).then(r => r.json())
     .then(coll => coll.map(([tileId, mapId, factionId, guardedAt, bricksPerDay]) => {
         const maxReward = calculateReward(bricksPerDay, guardedAt);
-        return { tileId, mapId, factionId, bricksPerDay, guardedAt, maxReward,
-            reward: null,
-            defense: null,
-        };
+        return { tileId, mapId, factionId, bricksPerDay, guardedAt, maxReward };
     })).then(lands => {
         return lands
             .filter(l => (!ALLIED_FACTION_IDS.has(l.factionId)))
@@ -151,11 +85,6 @@ async function fetchLands() {
             return acc;
         }, {});
         store.dispatch(setLands(landMap));
-        (async () => {
-            lands.forEach(async (l) => {
-                await fetchLandLimiter.call(l.tileId, l.tileId);
-            });
-        })();
     }).catch(e => {
         console.error(e);
     });
@@ -166,8 +95,8 @@ function LandRow({ land }) {
     return (
         <tr>
             <td className="left"><a href={href} target="_blank" rel="noreferrer">{land.tileId}</a></td>
-            <td>{land.reward ? land.reward.toFixed(6) : ''}</td>
-            <td>{land.defense}</td>
+            <td>{land.maxReward ? land.maxReward.toFixed(6) : ''}</td>
+            <td>{land.bricksPerDay.toFixed(3)}</td>
         </tr>
     );
 }
@@ -180,26 +109,14 @@ function LandsList() {
                 <thead>
                     <tr>
                         <th className="left">Land</th>
-                        <th>Raid Reward</th>
-                        <th>Defense</th>
+                        <th>Max Raid Reward</th>
+                        <th>Bricks Per Day</th>
                     </tr>
                 </thead>
                 <tbody>
                     {lands.map(l => <LandRow key={l.tileId} land={l} />)}
                 </tbody>
             </table>
-        );
-    }
-}
-
-function LandsLoaded() {
-    const total = useSelector(selectLandCount);
-    const loaded = useSelector(selectLoadedLandCount);
-    if ((total !== null) && (loaded !== null)) {
-        return (
-            <div className="LandsLoaded">
-                <span>{loaded}/{total}</span>
-            </div>
         );
     }
 }
@@ -218,7 +135,6 @@ function Error() {
 function Main() {
     return (
         <div>
-            <LandsLoaded />
             <LandsList />
         </div>
     );
