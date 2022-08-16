@@ -55,7 +55,10 @@ function calculateReward(bricksPerDay, timeString) {
     if (timeString === null) {
         return 0;
     } else {
-        const time = new Date(timeString.replace(/\.\d+$/, '.000') + 'Z');
+        if (!timeString.includes('Z')) {
+            timeString = timeString.replace(/\.\d+$/, '.000') + 'Z';
+        }
+        const time = new Date(timeString);
         const now = new Date();
         const ms = now.getTime() - time.getTime();
         const hours = (ms / 1000 / 60 / 60);
