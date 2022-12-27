@@ -10,7 +10,7 @@ const API_URL = 'https://liquidlands-api.sirsean.workers.dev';
 const ALLIED_FACTION_IDS = new Set([
     199, // Homie G
     249, // Wandernauts
-    266, // Cryptorunnerso
+    266, // Cryptorunners
     240, // Bored Ape Pixel Club
     243, // Bored 2 Death Club
     253, // Battle Bunnies
@@ -45,7 +45,7 @@ const store = configureStore({
 const selectError = state => state.error;
 const selectLands = state => {
     if (state.lands) {
-        return Object.keys(state.lands).map(landId => state.lands[landId]).sort(sortBy('-maxReward')).splice(0, 100);
+        return Object.keys(state.lands).map(landId => state.lands[landId]).filter(land => land.defense < 10).sort(sortBy('-maxReward')).splice(0, 100);
     } else {
         return [];
     }
@@ -62,7 +62,7 @@ function calculateReward(bricksPerDay, timeString) {
         const now = new Date();
         const ms = now.getTime() - time.getTime();
         const hours = (ms / 1000 / 60 / 60);
-        const days = (hours / 24);
+        const days = Math.min(2, hours / 24);
         return ((bricksPerDay * days) / 3.7);
     }
 }
@@ -74,9 +74,9 @@ async function fetchLands() {
             'Content-Type': 'application/json',
         },
     }).then(r => r.json())
-    .then(coll => coll.map(([tileId, mapId, factionId, guardedAt, bricksPerDay]) => {
+    .then(coll => coll.map(([tileId, mapId, factionId, guardedAt, bricksPerDay, defense, country]) => {
         const maxReward = calculateReward(bricksPerDay, guardedAt);
-        return { tileId, mapId, factionId, bricksPerDay, guardedAt, maxReward };
+        return { tileId, mapId, factionId, bricksPerDay, guardedAt, maxReward, defense, country };
     })).then(lands => {
         return lands
             .filter(l => (!ALLIED_FACTION_IDS.has(l.factionId)))
@@ -98,8 +98,10 @@ function LandRow({ land }) {
     return (
         <tr>
             <td className="left"><a href={href} target="_blank" rel="noreferrer">{land.tileId}</a></td>
+            <td>{land.country.toUpperCase()}</td>
             <td>{land.maxReward ? land.maxReward.toFixed(6) : ''}</td>
             <td>{land.bricksPerDay.toFixed(3)}</td>
+            <td>{land.defense}</td>
         </tr>
     );
 }
@@ -112,8 +114,10 @@ function LandsList() {
                 <thead>
                     <tr>
                         <th className="left">Land</th>
+                        <th>Country</th>
                         <th>Max Raid Reward</th>
                         <th>Bricks Per Day</th>
+                        <th>Defense</th>
                     </tr>
                 </thead>
                 <tbody>

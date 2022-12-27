@@ -45,6 +45,10 @@ table {
     width: 100%;
 }
 
+table tr:nth-child(even) {
+    background-color: var(--midnight);
+}
+
 table th {
     text-align: right;
 }
@@ -54,7 +58,7 @@ table th.left {
 }
 
 table td {
-    font-size: 1.2em;
+    font-size: 1.4em;
     text-align: right;
 }
 
@@ -63,7 +67,7 @@ table td.left {
 }
 
 table a {
-    font-size: 1.4em;
+    font-size: 1.6em;
 }
 
 .factions img {
