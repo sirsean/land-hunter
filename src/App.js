@@ -51,6 +51,9 @@ const selectLands = state => {
     }
 };
 
+// what is the right multiplier for raid rewards?
+const REWARD_MULTIPLIER = 1 / 3.7;
+
 function calculateReward(bricksPerDay, timeString) {
     if (timeString === null) {
         return 0;
@@ -63,7 +66,7 @@ function calculateReward(bricksPerDay, timeString) {
         const ms = now.getTime() - time.getTime();
         const hours = (ms / 1000 / 60 / 60);
         const days = Math.min(2, hours / 24);
-        return ((bricksPerDay * days) / 3.7);
+        return ((bricksPerDay * days) * REWARD_MULTIPLIER);
     }
 }
 
